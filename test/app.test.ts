@@ -4,45 +4,62 @@ import app from "../src/index";
 // import { TaskService } from "../src/services/TaskService";
 
 describe("User & Task API", () => {
+  /**
+   * BUG FIX TEST:
+   * We want to ensure GET /api/tasks?userId=1
+   * returns only tasks with userId === 1.
+   */
+  it("GET /api/tasks?userId=1 => returns tasks that belong only to user 1", async () => {
+    const res = await request(app).get("/api/tasks?userId=1");
+    expect(res.status).toBe(200);
+    // Check that all tasks belong to userId 1
+    res.body.forEach((task: any) => {
+      expect(task.userId).toBe(1);
+    });
+  });
+
+  /**
+   * FEATURE TEST:
+   * DELETE /api/users/:id => removes a user (or returns a 404 if the user is not found)
+   */
+  it("DELETE /api/users/:id => should delete the user or return 404", async () => {
+    // TODO: Implement this test
+    expect("this test").toBe("implemented");
+  });
+
   it("GET /api/users/:id => returns 404 if user is not found", async () => {
     const res = await request(app).get("/api/users/999");
     expect(res.status).toBe(404);
     expect(res.body.error).toBe("User not found");
   });
 
-  /**
-   * BUG FIX TEST:
-   * We want to ensure GET /api/tasks?userId=1
-   * returns only tasks with userId === 1.
-   *
-   * Once you fix the route in index.ts, write a test to confirm:
-   */
-  it("GET /api/tasks?userId=1 => returns tasks that belong only to user 1", async () => {
-    // TODO: Implement a test that confirms the bug is fixed.
-    // Example approach:
-    // 1. Send GET /api/tasks?userId=1
-    // 2. Ensure the response only has tasks where task.userId = 1
+  it("GET /api/users/:id => returns user if found", async () => {
+    const res = await request(app).get("/api/users/1");
+    expect(res.status).toBe(200);
+    expect(res.body.id).toBe(1);
+    expect(res.body.name).toBe("Alice");
   });
 
-  /**
-   * EXAMPLE of how you'd mock the TaskService (if you needed it):
-   *
-   * it("should mock TaskService.getTasksByUserId", async () => {
-   *   const mockGetTasksByUserId = jest.spyOn(TaskService.prototype, "forUser")
-   *       .mockReturnValue([{ id: 999, userId: 1, title: "Mocked!", status: "TODO" }]);
-   *
-   *   const res = await request(app).get("/api/tasks?userId=1");
-   *   expect(mockGetTasksByUserId).toHaveBeenCalledWith(1);
-   *   // do more checks...
-   *   mockGetTasksByUserId.mockRestore();
-   * });
-   */
+  it("POST /api/users => creates a new user", async () => {
+    const newUser = { name: "Bob", permissions: ["USER"] };
+    const res = await request(app)
+      .post("/api/users")
+      .send(newUser);
+    expect(res.status).toBe(201);
+    expect(res.body.name).toBe("Bob");
+    expect(res.body.permissions).toEqual(["USER"]);
+    expect(res.body.id).toBeDefined();
+  });
 
-  /**
-   * FEATURE TEST:
-   * DELETE /api/users/:id => removes a user
-   */
-  it("DELETE /api/users/:id => should delete the user or return 404", async () => {
-    // TODO: Implement this test
+  it("POST /api/tasks => creates a new task", async () => {
+    const newTask = { userId: 1, title: "Test Task", status: "TODO" };
+    const res = await request(app)
+      .post("/api/tasks")
+      .send(newTask);
+    expect(res.status).toBe(201);
+    expect(res.body.title).toBe("Test Task");
+    expect(res.body.userId).toBe(1);
+    expect(res.body.status).toBe("TODO");
+    expect(res.body.id).toBeDefined();
   });
 });
